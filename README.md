@@ -5,6 +5,8 @@ At first it was extremely basic, but it quickly expanded to have much more funct
 The library supports finding songs by name or id and returns results in multiple languages where available.
 I don't think there's any major issues with it, but I've been wrong about many things before. If something doesn't work or could be done better, feel free to create an issue or put in a pull request.
 
+My tests are just included because they were there. They check some basic functionality, but shouldn't be considered a full testing suite.
+
 
 
 ### Usage notes:
