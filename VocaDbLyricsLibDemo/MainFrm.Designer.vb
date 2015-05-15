@@ -101,6 +101,7 @@ Partial Class MainFrm
         '
         'SongBox
         '
+        Me.SongBox.AllowDrop = True
         Me.SongBox.Location = New System.Drawing.Point(12, 152)
         Me.SongBox.Name = "SongBox"
         Me.SongBox.Size = New System.Drawing.Size(284, 20)
@@ -117,6 +118,7 @@ Partial Class MainFrm
         '
         'ArtistBox
         '
+        Me.ArtistBox.AllowDrop = True
         Me.ArtistBox.Location = New System.Drawing.Point(12, 199)
         Me.ArtistBox.Name = "ArtistBox"
         Me.ArtistBox.Size = New System.Drawing.Size(283, 20)

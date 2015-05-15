@@ -19,6 +19,9 @@ Public Class VocaDbLyricsLib
     ''' <summary>The URL of the site to get results from. This allows the library to be used for other sites based on the VocaDB code. Note that the only other such site, UtaiteDB, uses an older version of the API and is incompatible with this library (as of 2015-04-27).</summary>
     Public DatabaseUrl As Uri = New Uri("http://vocadb.net/")
 
+    ''' <summary>An array of strings used to separate the song name from additional information in the title (eg. " feat.").</summary>
+    Public SongSplitStrings() As String = {" feat.", " ft.", " feat ", " ft ", "(feat", "(ft"}
+
     ''' <summary>An array of strings used to split the artist field into multiple strings (eg. " feat.", " and ").</summary>
     Public ArtistSplitStrings() As String = {" feat.", " ft.", " feat ", " ft ", " X ", " x ", " Ｘ ", " ｘ ", "×", "✕", "✖", "⨯", "╳", ",", ";", "+", "(", "&", " and "}
 
@@ -99,7 +102,7 @@ Public Class VocaDbLyricsLib
         Dim LyricsResult As New LyricsResult
         Dim ArtistId As Integer = -1
 
-        Song = Song.Trim()
+        Song = Song.Split(SongSplitStrings, 2, StringSplitOptions.RemoveEmptyEntries)(0).Trim()
 
         If Artist IsNot Nothing Then
             Dim Artists() As String
@@ -138,7 +141,7 @@ Public Class VocaDbLyricsLib
         Dim Xml As New Xml.XmlDocument
 
         Try
-            Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/artists?query=" & Artist & "&sort=" & ArtistSearchSort & "&maxResults=1&nameMatchMode=exact&maxResults=1"))
+            Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/artists?query=" & Uri.EscapeDataString(Artist) & "&sort=" & ArtistSearchSort & "&maxResults=1&nameMatchMode=exact&maxResults=1"))
         Catch
             Return -1
         End Try
@@ -154,8 +157,8 @@ Public Class VocaDbLyricsLib
         Dim Xml As New Xml.XmlDocument
 
         Try
-            If ArtistId = -1 Then Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Song & "&sort=" & SongSearchSort & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs)) _
-                Else Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Song & "&artistId=" & ArtistId & "&sort=" & SongSearchSort & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs))
+            If ArtistId = -1 Then Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Uri.EscapeDataString(Song) & "&sort=" & SongSearchSort & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs)) _
+                Else Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Uri.EscapeDataString(Song) & "&artistId=" & ArtistId & "&sort=" & SongSearchSort & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs))
         Catch
             Return Nothing
         End Try
