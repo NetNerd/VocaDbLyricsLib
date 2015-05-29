@@ -6,8 +6,8 @@
 Public Class VocaDbLyricsLib
     'Public variables
     ''' <summary>The user agent to be used in any web requests.</summary>
-    Public UserAgent As String = "VocaDbLyricsLib/0.1"
-    Private DefaultUserAgent As String = "VocaDbLyricsLib/0.1"
+    Public UserAgent As String = "VocaDbLyricsLib/0.2"
+    Private DefaultUserAgent As String = "VocaDbLyricsLib/0.2"
 
     ''' <summary>Controls whether or not the default user agent of the library is appended to the provided one. Recommended if using a custom user agent. Defaults to true.</summary>
     Public AppendDefaultUserAgent As Boolean = True
@@ -25,21 +25,17 @@ Public Class VocaDbLyricsLib
     ''' <summary>An array of strings used to split the artist field into multiple strings (eg. " feat.", " and ").</summary>
     Public ArtistSplitStrings() As String = {" feat.", " ft.", " feat ", " ft ", " X ", " x ", " Ｘ ", " ｘ ", "×", "✕", "✖", "⨯", "╳", ",", ";", "+", "(", "&", " and "}
 
-    ''' <summary>Depreciated (use <see cref="SearchSongs" /> instead). Sets how many entries the library will request from VocaDB when searching for lyrics. An OriginalSongId or lyrics being found will return lyrics without searching through more results. Not applicable when getting lyrics by ID.</summary>
-    Public SearchTries As Integer = Nothing
-
     ''' <summary>Sets how many entries the library will request from VocaDB when searching for lyrics. An OriginalSongId or lyrics being found will return lyrics without searching through more results. Not applicable when getting lyrics by ID.</summary>
     Public SearchSongs As Integer = 3
-    Private SearchSongsDefault As Integer = 3
 
     ''' <summary>When this is true, the library will stop searching through results (see <see cref="SearchSongs" />) if it finds one with the instrumental tag. In most cases, this helps to prevent issues from finding versions with lyrics, but it may cause issues.</summary>
     Public DetectInstrumental As Boolean = True
 
     ''' <summary>VocaDB supports multiple orders to present results in when searching. This selects the one to use for songs. By default, FavoritedTimes is used to favour more popular songs.</summary>
-    Public SongSearchSort As String = "FavoritedTimes"
+    Public SongSortRule As SongSortRules = SongSortRules.FavoritedTimes
 
     ''' <summary>VocaDB supports multiple orders to present results in when searching. This selects the one to use for artists. By default, FollowerCount is used to favour more popular artists.</summary>
-    Public ArtistSearchSort As String = "FollowerCount"
+    Public ArtistSortRule As ArtistSortRules = ArtistSortRules.FollowerCount
 
 
     'Data Structures
@@ -92,6 +88,25 @@ Public Class VocaDbLyricsLib
         UsedOriginal = 2
     End Enum
 
+    Public Enum SongSortRules
+        None
+        Name
+        AdditionDate
+        FavoritedTimes
+        RatingScore
+    End Enum
+
+    Public Enum ArtistSortRules
+        None
+        Name
+        ''' <summary>(Descending)</summary>
+        AdditionDate
+        ''' <summary>(Ascending)</summary>
+        AdditionDateAsc
+        SongCount
+        SongRating
+        FollowerCount
+    End Enum
 
     ''' <summary>
     ''' Returns the lyrics of a song on VocaDB from its name.
@@ -118,7 +133,6 @@ Public Class VocaDbLyricsLib
             Next
         End If
 
-        If Not SearchTries = Nothing AndAlso SearchSongs = SearchSongsDefault Then SearchSongs = SearchTries
         LyricsResult = GetLyricsResultFromXml(GetSongFromName(Song, ArtistId))
 
         If ArtistId = -1 AndAlso Artist IsNot Nothing AndAlso Artist.Length > 0 Then
@@ -141,7 +155,7 @@ Public Class VocaDbLyricsLib
         Dim Xml As New Xml.XmlDocument
 
         Try
-            Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/artists?query=" & Uri.EscapeDataString(Artist) & "&sort=" & ArtistSearchSort & "&maxResults=1&nameMatchMode=exact&maxResults=1"))
+            Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/artists?query=" & Uri.EscapeDataString(Artist) & "&sort=" & ArtistSortRule.ToString & "&maxResults=1&nameMatchMode=exact&maxResults=1"))
         Catch
             Return -1
         End Try
@@ -157,12 +171,11 @@ Public Class VocaDbLyricsLib
         Dim Xml As New Xml.XmlDocument
 
         Try
-            If ArtistId = -1 Then Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Uri.EscapeDataString(Song) & "&sort=" & SongSearchSort & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs)) _
-                Else Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Uri.EscapeDataString(Song) & "&artistId=" & ArtistId & "&sort=" & SongSearchSort & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs))
+            If ArtistId = -1 Then Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Uri.EscapeDataString(Song) & "&sort=" & SongSortRule.ToString & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs)) _
+                Else Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Uri.EscapeDataString(Song) & "&artistId=" & ArtistId & "&sort=" & SongSortRule.ToString & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs))
         Catch
             Return Nothing
         End Try
-
         Return Xml
     End Function
 
