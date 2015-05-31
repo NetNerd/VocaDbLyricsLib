@@ -86,4 +86,22 @@ Imports Microsoft.VisualStudio.TestTools.UnitTesting
         LyricsLib.Proxy = Nothing
     End Sub
 
+    <TestMethod()> Public Sub ForceArtist_Success()
+        LyricsLib.ForceArtistMatch = True
+        LyricsResult = LyricsLib.GetLyricsFromName("twitter", "darvishP")
+        Assert.IsTrue(LyricsResult.LyricsContainers.Count > 0)
+        Assert.IsTrue(LyricsResult.ErrorType = VocaDbLyricsLib.VocaDbLyricsError.None)
+        Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.None)
+        LyricsLib.ForceArtistMatch = False
+    End Sub
+
+    <TestMethod()> Public Sub ForceArtist_Fail()
+        LyricsLib.ForceArtistMatch = True
+        LyricsResult = LyricsLib.GetLyricsFromName("twitter", "dalvish")
+        Assert.IsTrue(LyricsResult.LyricsContainers.Count = 0)
+        Assert.IsTrue(LyricsResult.ErrorType = VocaDbLyricsLib.VocaDbLyricsError.NoSong)
+        Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.NoArtist)
+        LyricsLib.ForceArtistMatch = False
+    End Sub
+
 End Class

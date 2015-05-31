@@ -37,6 +37,8 @@ Public Class VocaDbLyricsLib
     ''' <summary>VocaDB supports multiple orders to present results in when searching. This selects the one to use for artists. By default, FollowerCount is used to favour more popular artists.</summary>
     Public ArtistSortRule As ArtistSortRules = ArtistSortRules.FollowerCount
 
+    ''' <summary>Only return lyrics if the artist is found.</summary>
+    Public ForceArtistMatch As Boolean = False
 
     'Data Structures
     ''' <summary>Contains lyrics and associated information.</summary>
@@ -88,23 +90,45 @@ Public Class VocaDbLyricsLib
         UsedOriginal = 2
     End Enum
 
+    ''' <summary>Sorting methods for songs.</summary>
     Public Enum SongSortRules
+        ''' <summary>No sorting.</summary>
         None
+
+        ''' <summary>Sort by name.</summary>
         Name
+
+        ''' <summary>Sort by the date of addition to the database.</summary>
         AdditionDate
+
+        ''' <summary>Sort by the number of favorites on the song.</summary>
         FavoritedTimes
+
+        ''' <summary>Sort by the rating of the song.</summary>
         RatingScore
     End Enum
 
+    ''' <summary>Sorting methods for artists.</summary>
     Public Enum ArtistSortRules
+        ''' <summary>No sorting.</summary>
         None
+
+        ''' <summary>Sort by name.</summary>
         Name
-        ''' <summary>(Descending)</summary>
+
+        ''' <summary>Sort by the date of addition to the database (descending).</summary>
         AdditionDate
-        ''' <summary>(Ascending)</summary>
+
+        ''' <summary>Sort by the date of addition to the database (ascending).</summary>
         AdditionDateAsc
+
+        ''' <summary>Sort by the number of songs the artist has.</summary>
         SongCount
+
+        ''' <summary>Sort by the average(?) rating of the artist's songs.</summary>
         SongRating
+
+        ''' <summary>Sort by the number of followers the artist has.</summary>
         FollowerCount
     End Enum
 
@@ -116,6 +140,12 @@ Public Class VocaDbLyricsLib
     Public Function GetLyricsFromName(Song As String, Optional Artist As String = Nothing) As LyricsResult
         Dim LyricsResult As New LyricsResult
         Dim ArtistId As Integer = -1
+
+        If Song Is Nothing OrElse Song.Length = 0 Then
+            LyricsResult.LyricsContainers = {}
+            LyricsResult.ErrorType = VocaDbLyricsError.NoSong
+            Return LyricsResult
+        End If
 
         Song = Song.Split(SongSplitStrings, 2, StringSplitOptions.RemoveEmptyEntries)(0).Trim()
 
@@ -131,6 +161,15 @@ Public Class VocaDbLyricsLib
                     Exit For
                 End If
             Next
+        End If
+
+        'This could definitely be done better, but meh.
+        If ForceArtistMatch = True AndAlso ArtistId = -1 Then
+            LyricsResult = New LyricsResult
+            LyricsResult.LyricsContainers = {}
+            LyricsResult.WarningType = VocaDbLyricsWarning.NoArtist
+            LyricsResult.ErrorType = VocaDbLyricsError.NoSong
+            Return LyricsResult
         End If
 
         LyricsResult = GetLyricsResultFromXml(GetSongFromName(Song, ArtistId))
@@ -173,6 +212,10 @@ Public Class VocaDbLyricsLib
         Try
             If ArtistId = -1 Then Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Uri.EscapeDataString(Song) & "&sort=" & SongSortRule.ToString & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs)) _
                 Else Xml.LoadXml(DownloadXml(DatabaseUrl.AbsoluteUri & "api/songs?query=" & Uri.EscapeDataString(Song) & "&artistId=" & ArtistId & "&sort=" & SongSortRule.ToString & "&fields=lyrics,tags&nameMatchMode=exact&maxResults=" & SearchSongs))
+
+            'I'm good for testing getting the original version from within the XML. I haven't found a real-world scenario for tis yet.
+            'Xml.LoadXml(DownloadXml("http://vocadb.net/api/songs?query=twitter&artistId=130&fields=lyrics,tags&sort=AdditionDate&nameMatchMode=words&maxResults=3"))
+
         Catch
             Return Nothing
         End Try
@@ -207,56 +250,6 @@ Public Class VocaDbLyricsLib
         Return RtnStr
     End Function
 
-    'Old version of the function --- just here incase I screwed up the rewrite
-    'Private Function GetLyricsResultFromXml(Xml As Xml.XmlDocument) As LyricsResult
-    '    Dim LyricsResult As New LyricsResult
-    '    LyricsResult.LyricsContainers = {}
-
-    '    'This is the error detection code:
-    '    If Xml Is Nothing Then
-    '        LyricsResult.ErrorType = VocaDbLyricsError.ConnectionError
-    '        Return LyricsResult
-    '    End If
-
-    '    If Xml.GetElementsByTagName("Id").Count = 0 Then
-    '        LyricsResult.ErrorType = VocaDbLyricsError.NoSong
-    '        Return LyricsResult
-    '    End If
-
-    '    If Xml.GetElementsByTagName("LyricsForSongContract").Count = 0 Then
-
-    '        'We only want to return lyrics for non-instrumentals. If we detect an instrumental, we can return an error (if DetectInstrumental = true).
-    '        If DetectInstrumental = True Then
-    '            For Each Tag As Xml.XmlNode In Xml.GetElementsByTagName("TagUsageForApiContract")
-    '                If Tag.Item("Name").InnerText = "instrumental" Then
-    '                    LyricsResult.ErrorType = VocaDbLyricsError.IsInstrumental
-    '                    Return LyricsResult
-    '                End If
-    '            Next
-    '        End If
-
-    '        If Xml.GetElementsByTagName("OriginalVersionId").Count > 0 Then
-    '            'If there's an id for an original version, we've found a cover/remix and there might be lyrics in the original version's entry.
-    '            LyricsResult = GetLyricsResultFromXml(GetSongFromId(CInt(Xml.GetElementsByTagName("OriginalVersionId")(0).InnerText)))
-    '            LyricsResult.WarningType = VocaDbLyricsWarning.UsedOriginal
-    '            Return LyricsResult
-    '        Else
-    '            'If there's no original version, we have no other options; there's no lyrics available.
-    '            LyricsResult.ErrorType = VocaDbLyricsError.NoLyrics
-    '            Return LyricsResult
-    '        End If
-    '    End If
-
-    '    Dim LyricsContainers(Xml.GetElementsByTagName("LyricsForSongContract").Count - 1) As LyricsContainer
-    '    For i As Integer = 0 To LyricsContainers.Length - 1
-    '        Dim Lyrics = Xml.GetElementsByTagName("LyricsForSongContract")(i)
-    '        LyricsContainers(i).Language = Lyrics.Item("Language").InnerText
-    '        LyricsContainers(i).Lyrics = Lyrics.Item("Value").InnerText
-    '    Next
-    '    LyricsResult.LyricsContainers = LyricsContainers
-    '    Return LyricsResult
-    'End Function
-
 
     'This new version can parse multiple songs at once.
     'This means that we can retrieve multiple songs in one DB query.
@@ -276,38 +269,36 @@ Public Class VocaDbLyricsLib
             Return LyricsResult
         End If
 
+
+        'The fun part:
         For Each SongContract As Xml.XmlNode In Xml.GetElementsByTagName("SongForApiContract")
             If SongContract.Item("Lyrics").FirstChild Is Nothing Then
 
                 If DetectInstrumental = True Then
                     'We only want to return lyrics for non-instrumentals. If we detect an instrumental, we can return an error.
+
                     For Each Tag As Xml.XmlNode In SongContract.Item("Tags").ChildNodes
                         If Tag.Item("Name").InnerText = "instrumental" Then
+                            'Detecting an instrumental causes searching to stop, because there's a decent chance that continued searching will falsely return lyrics.
                             LyricsResult.ErrorType = VocaDbLyricsError.IsInstrumental
-                            'Detecting an instrumental forces searching to stop, becaues there's a decent chance that continued searching will falsely return lyrics.
                             Return LyricsResult
                         End If
                     Next
                 End If
 
-                'Boolean is used to track whether or not we found the original version in the data we already downloaded.
-                Dim XmlHadOriginal As Boolean = False
                 If SongContract.Item("OriginalVersionId") IsNot Nothing Then
-                    For Each OgSongContract As Xml.XmlNode In Xml.GetElementsByTagName("SongForApiContract")
-                        If OgSongContract.Item("Id").InnerText = SongContract.Item("OriginalVersionId").InnerText Then
-                            XmlHadOriginal = True
-                            Dim XmlDoc As New Xml.XmlDocument
-                            XmlDoc.LoadXml(OgSongContract.OuterXml)
-                            LyricsResult = GetLyricsResultFromXml(XmlDoc)
-                            If LyricsResult.LyricsContainers.Count > 0 Then
-                                LyricsResult.WarningType = VocaDbLyricsWarning.UsedOriginal
-                                Return LyricsResult
-                            End If
-                        End If
-                    Next
+                    Dim OrigContract As Integer = OriginalContractIndex(Xml, SongContract.Item("OriginalVersionId").InnerText)
 
-                    If XmlHadOriginal = False Then
-                        LyricsResult = GetLyricsResultFromXml(GetSongFromId(CInt(SongContract.Item("OriginalVersionId").InnerText)))
+                    If OrigContract > -1 Then
+                        Dim XmlDoc As New Xml.XmlDocument
+                        XmlDoc.LoadXml(Xml.GetElementsByTagName("SongForApiContract").Item(OrigContract).OuterXml)
+                        LyricsResult = GetLyricsResultFromXml(XmlDoc)
+                        If LyricsResult.LyricsContainers.Count > 0 Then
+                            LyricsResult.WarningType = VocaDbLyricsWarning.UsedOriginal
+                            Return LyricsResult
+                        End If
+                    Else
+                        LyricsResult = GetLyricsResultFromXml(GetSongFromId(SongContract.Item("OriginalVersionId").InnerText))
                         If LyricsResult.LyricsContainers.Count > 0 Then
                             LyricsResult.WarningType = VocaDbLyricsWarning.UsedOriginal
                             Return LyricsResult
@@ -328,6 +319,15 @@ Public Class VocaDbLyricsLib
         Next
         LyricsResult.ErrorType = VocaDbLyricsError.NoLyrics
         Return LyricsResult
+    End Function
+
+    Private Function OriginalContractIndex(Xml As Xml.XmlDocument, OriginalID As Integer) As Integer
+        For i = 0 To Xml.GetElementsByTagName("SongForApiContract").Count - 1
+            If Xml.GetElementsByTagName("SongForApiContract").Item(i).Item("Id").InnerText = OriginalID Then
+                Return i
+            End If
+        Next
+        Return -1
     End Function
 End Class
 
