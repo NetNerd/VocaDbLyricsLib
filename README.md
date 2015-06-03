@@ -29,3 +29,5 @@ VocaDbLyricsLib comes with no warranty or guarantees. It probably won't break an
 
 ### Licensing:
 VocaDbLyricsLib is licensed under the LGPL v3.
+
+Source code can be found at https://github.com/NetNerd/VocaDbLyricsLib.
