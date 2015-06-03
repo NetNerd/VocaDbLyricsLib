@@ -21,13 +21,11 @@ The library doesn't implement any exceptions (look, I'm not a professional devel
 
 
 ### Legal info:
-netnerd is not affiliated in any way with VocaDB. This library is completely unofficial and is not to be considered in any way official.
+NetNerd is not affiliated in any way with VocaDB. This library is completely unofficial and is not to be considered in any way official.
 
 VocaDbLyricsLib comes with no warranty or guarantees. It probably won't break anything, but I won't promise you anything. Use is at your own risk.
 
 
 
 ### Licensing:
-Currently, I haven't decided on a license, but I wanted to get this on github already.
-For now, feel free to use it (via source or a compiled dll) in your projects.
-Modification is allowed, but I ask you to contribute your changes back to the main project where possible (and if possible, defining a custom user-agent would be appreciated).
+VocaDbLyricsLib is licensed under the LGPL v3.

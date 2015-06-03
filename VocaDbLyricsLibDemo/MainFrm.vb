@@ -1,4 +1,23 @@
-﻿Public Class MainFrm
+﻿'Copyright © 2015 NetNerd
+
+
+'This file is part of VocaDbLyricsLib(Demo).
+
+'VocaDbLyricsLib is free software: you can redistribute it and/or modify
+'it under the terms Of the GNU Lesser General Public License As published by
+'the Free Software Foundation, either version 3 Of the License, Or
+'(at your option) any later version.
+
+'VocaDbLyricsLib Is distributed In the hope that it will be useful,
+'but WITHOUT ANY WARRANTY; without even the implied warranty Of
+'MERCHANTABILITY Or FITNESS FOR A PARTICULAR PURPOSE.  See the
+'GNU Lesser General Public License For more details.
+
+'You should have received a copy Of the GNU Lesser General Public License
+'along with VocaDbLyricsLib.  If Not, see < http: //www.gnu.org/licenses/>.
+
+
+Public Class MainFrm
     Dim GetLyricsThread As New Threading.Thread(New Threading.ThreadStart(AddressOf GetLyricsSub))
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -14,7 +33,7 @@
             sender.Items.Add(e.Data.GetData(DataFormats.Text))
         Else
             sender.Items.Insert(sender.PointToClient(New Point(e.X, e.Y)).Y / sender.ItemHeight, e.Data.GetData(DataFormats.Text))
-            End If
+        End If
 
         'Remove the old item
         If (LangBox1.SelectedIndex > -1 AndAlso e.Data.GetData(DataFormats.Text) Is LangBox1.Items(LangBox1.SelectedIndex)) Then
