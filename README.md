@@ -7,7 +7,7 @@ I don't think there's any major issues with it, but I've been wrong about many t
 
 My tests are just included because they were there. They check some basic functionality, but shouldn't be considered a full testing suite.
 
-
+&nbsp;
 
 ### Usage notes:
 Usage is simple, just create a new `VocaDbLyricsLib` and run `YourLyricsLibInstance.GetLyricsFromName` or `YourLyricsLibInstance.GetLyricsId`.
@@ -18,14 +18,14 @@ Under any circumstances I can think of, the library should return a valid `Lyric
 This means that error checking shouldn't really be necessary for a developer using the library (just look at the demo code to see what I mean).
 The library doesn't implement any exceptions (look, I'm not a professional developer, but I didn't really find them necessary), but instead utilises enumerations of error/warning types which can be checked to see what went wrong. Note that a warning won't stop lyrics from being returned - they just provide some additional information that may be useful).
 
-
+&nbsp;
 
 ### Legal info:
 NetNerd is not affiliated in any way with VocaDB. This library is completely unofficial and is not to be considered in any way official.
 
 VocaDbLyricsLib comes with no warranty or guarantees. It probably won't break anything, but I won't promise you anything. Use is at your own risk.
 
-
+&nbsp;
 
 ### Licensing:
 VocaDbLyricsLib is licensed under the LGPL v3.
