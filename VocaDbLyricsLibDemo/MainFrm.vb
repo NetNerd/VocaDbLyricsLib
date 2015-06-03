@@ -54,19 +54,19 @@ Public Class MainFrm
     End Sub
 
     Private Sub LangBox_MouseDown(ByVal sender As ListBox, ByVal e As System.Windows.Forms.MouseEventArgs) Handles LangBox1.MouseDown, LangBox2.MouseDown
+        sender.SelectionMode = SelectionMode.One
         Dim OldSelected As Integer = sender.SelectedIndex
         Dim OldSelectedText As String = sender.Text
         Dim OldCount As Integer = sender.Items.Count
 
-        sender.SelectionMode = SelectionMode.One
         Try
             sender.DoDragDrop(sender.Items(sender.IndexFromPoint(New Point(e.X, e.Y))), DragDropEffects.Move)
-        Catch
+        Catch ex As Exception
             sender.SelectionMode = SelectionMode.None 'You can drag over items to select them. This prevents that when you drag from a blank area.
         End Try
 
-        'If the old selected item is still in the same place, select it again because the user (hopefully) didn't want anything to change.
-        If sender.Items.Count = OldCount AndAlso sender.Items(OldSelected) = OldSelectedText Then
+        'If the Then old selected item Is still In the same place, Select it again because the user (hopefully) didn't want anything to change.
+        If sender.Items.Count = OldCount AndAlso OldSelected > -1 AndAlso sender.Items(OldSelected) = OldSelectedText AndAlso sender.SelectionMode = SelectionMode.One Then
             sender.SelectedIndex = OldSelected
         End If
     End Sub
