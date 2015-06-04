@@ -75,6 +75,10 @@ Public Class VocaDbLyricsLib
         Public LyricsContainers() As LyricsContainer
         Public ErrorType As VocaDbLyricsError
         Public WarningType As VocaDbLyricsWarning
+
+        Sub New(LyricsContainerArray() As LyricsContainer)
+            LyricsContainers = LyricsContainerArray
+        End Sub
     End Structure
 
 
@@ -157,11 +161,10 @@ Public Class VocaDbLyricsLib
     ''' <param name="Song">The name of the song.</param>
     ''' <param name="Artist">One or more artists of the song. Only the first provided artist that is found in the database will be used to find the song. (Optional)</param>
     Public Function GetLyricsFromName(Song As String, Optional Artist As String = Nothing) As LyricsResult
-        Dim LyricsResult As New LyricsResult
+        Dim LyricsResult As New LyricsResult({})
         Dim ArtistId As Integer = -1
 
         If Song Is Nothing OrElse Song.Length = 0 Then
-            LyricsResult.LyricsContainers = {}
             LyricsResult.ErrorType = VocaDbLyricsError.NoSong
             Return LyricsResult
         End If
@@ -184,8 +187,6 @@ Public Class VocaDbLyricsLib
 
         'This could definitely be done better, but meh.
         If ForceArtistMatch = True AndAlso ArtistId = -1 Then
-            LyricsResult = New LyricsResult
-            LyricsResult.LyricsContainers = {}
             LyricsResult.WarningType = VocaDbLyricsWarning.NoArtist
             LyricsResult.ErrorType = VocaDbLyricsError.NoSong
             Return LyricsResult
@@ -273,9 +274,8 @@ Public Class VocaDbLyricsLib
     'This new version can parse multiple songs at once.
     'This means that we can retrieve multiple songs in one DB query.
     Private Function GetLyricsResultFromXml(Xml As Xml.XmlDocument) As LyricsResult
-        Dim LyricsResult As New LyricsResult
-        LyricsResult.LyricsContainers = {}
-        Dim LyricsContainers() As LyricsContainer
+        Dim LyricsResult As New LyricsResult({})
+        'Dim LyricsContainers() As LyricsContainer
 
         'This is the error detection code:
         If Xml Is Nothing Then
@@ -326,13 +326,12 @@ Public Class VocaDbLyricsLib
                 End If
 
             Else
-                ReDim LyricsContainers(SongContract.Item("Lyrics").ChildNodes.Count - 1)
-                For i As Integer = 0 To LyricsContainers.Length - 1
+                ReDim LyricsResult.LyricsContainers(SongContract.Item("Lyrics").ChildNodes.Count - 1)
+                For i As Integer = 0 To LyricsResult.LyricsContainers.Length - 1
                     Dim Lyrics = SongContract.Item("Lyrics").ChildNodes(i)
-                    LyricsContainers(i).Language = Lyrics.Item("Language").InnerText
-                    LyricsContainers(i).Lyrics = Lyrics.Item("Value").InnerText
+                    LyricsResult.LyricsContainers(i).Language = Lyrics.Item("Language").InnerText
+                    LyricsResult.LyricsContainers(i).Lyrics = Lyrics.Item("Value").InnerText.Trim(vbCr & vbLf)
                 Next
-                LyricsResult.LyricsContainers = LyricsContainers
                 Return LyricsResult
             End If
         Next
