@@ -117,7 +117,7 @@ Public Class MainFrm
                     For Each LyricsContainer In LyricsResult.LyricsContainers
                         If LyricsContainer.Language = Item.ToString Then
                             If LyricsWriter.ToString.Length > 0 Then LyricsWriter.Write(vbNewLine & vbNewLine & vbNewLine & vbNewLine)
-                            LyricsWriter.WriteLine(LyricsContainer.Language & ":")
+                            If LangBox2.Items.Count > 1 Then LyricsWriter.WriteLine(LyricsContainer.Language & ":")
                             LyricsWriter.Write(LyricsContainer.Lyrics)
                         End If
                     Next

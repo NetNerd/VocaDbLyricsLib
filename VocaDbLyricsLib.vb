@@ -330,7 +330,7 @@ Public Class VocaDbLyricsLib
                 For i As Integer = 0 To LyricsResult.LyricsContainers.Length - 1
                     Dim Lyrics = SongContract.Item("Lyrics").ChildNodes(i)
                     LyricsResult.LyricsContainers(i).Language = Lyrics.Item("Language").InnerText
-                    LyricsResult.LyricsContainers(i).Lyrics = Lyrics.Item("Value").InnerText.Trim(vbCr & vbLf)
+                    LyricsResult.LyricsContainers(i).Lyrics = Lyrics.Item("Value").InnerText.Trim(vbNewLine)
                 Next
                 Return LyricsResult
             End If
