@@ -330,7 +330,13 @@ Public Class VocaDbLyricsLib
                 For i As Integer = 0 To LyricsResult.LyricsContainers.Length - 1
                     Dim Lyrics = SongContract.Item("Lyrics").ChildNodes(i)
                     LyricsResult.LyricsContainers(i).Language = Lyrics.Item("Language").InnerText
-                    LyricsResult.LyricsContainers(i).Lyrics = Lyrics.Item("Value").InnerText.Trim(vbNewLine).Trim(vbLf) 'I was having some problems with still having a linefeed after the first trim sometimes.
+                    LyricsResult.LyricsContainers(i).Lyrics = Lyrics.Item("Value").InnerText
+                    While LyricsResult.LyricsContainers(i).Lyrics.First = vbCr Or LyricsResult.LyricsContainers(i).Lyrics.First = vbLf
+                        LyricsResult.LyricsContainers(i).Lyrics = LyricsResult.LyricsContainers(i).Lyrics.Remove(0, 1)
+                    End While
+                    While LyricsResult.LyricsContainers(i).Lyrics.Last = vbCr Or LyricsResult.LyricsContainers(i).Lyrics.Last = vbLf
+                        LyricsResult.LyricsContainers(i).Lyrics = LyricsResult.LyricsContainers(i).Lyrics.Remove(LyricsResult.LyricsContainers(i).Lyrics.Length - 1, 1)
+                    End While
                 Next
                 Return LyricsResult
             End If
