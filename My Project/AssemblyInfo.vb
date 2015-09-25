@@ -9,7 +9,7 @@ Imports System.Runtime.InteropServices
 ' Review the values of the assembly attributes
 
 <Assembly: AssemblyTitle("VocaDbLyricsLib")> 
-<Assembly: AssemblyDescription("A library for scraping lyrics from VocaDB")> 
+<Assembly: AssemblyDescription("A library for getting lyrics from VocaDB")> 
 <Assembly: AssemblyCompany("")> 
 <Assembly: AssemblyProduct("VocaDbLyricsLib")> 
 <Assembly: AssemblyCopyright("Copyright ©  2015")> 
@@ -31,5 +31,5 @@ Imports System.Runtime.InteropServices
 ' by using the '*' as shown below:
 ' <Assembly: AssemblyVersion("1.0.*")> 
 
-<Assembly: AssemblyVersion("0.2")>
-<Assembly: AssemblyFileVersion("0.2")>
+<Assembly: AssemblyVersion("0.3")>
+<Assembly: AssemblyFileVersion("0.3")>
