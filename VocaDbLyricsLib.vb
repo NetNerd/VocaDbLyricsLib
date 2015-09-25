@@ -25,8 +25,8 @@ Imports System.Runtime.InteropServices
 Public Class VocaDbLyricsLib
     'Public variables
     ''' <summary>The user agent to be used in any web requests.</summary>
-    Public UserAgent As String = "VocaDbLyricsLib/0.2"
-    Private DefaultUserAgent As String = "VocaDbLyricsLib/0.2"
+    Public UserAgent As String = "VocaDbLyricsLib/0.3"
+    Private DefaultUserAgent As String = "VocaDbLyricsLib/0.3"
 
     ''' <summary>Controls whether or not the default user agent of the library is appended to the provided one. Recommended if using a custom user agent. Defaults to true.</summary>
     Public AppendDefaultUserAgent As Boolean = True
@@ -176,12 +176,9 @@ Public Class VocaDbLyricsLib
             Artists = Artist.Split(ArtistSplitStrings, 2, StringSplitOptions.RemoveEmptyEntries)
 
             For Each ArtistForId As String In Artists
-                If ArtistId = -1 Then
                     ArtistForId = ArtistForId.Trim()
                     ArtistId = GetArtistId(ArtistForId)
-                Else
-                    Exit For
-                End If
+                If ArtistId > -1 Or ForceArtistMatch = True Then Exit For
             Next
         End If
 
