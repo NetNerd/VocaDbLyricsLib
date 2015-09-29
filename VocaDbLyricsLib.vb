@@ -35,7 +35,7 @@ Public Class VocaDbLyricsLib
     ''' Nothing is equivalent to not setting anything as far as the WebClient is concerned.
     Public Proxy As Net.WebProxy = Nothing
 
-    ''' <summary>The URL of the site to get results from. This allows the library to be used for other sites based on the VocaDB code. Note that the only other such site, UtaiteDB, uses an older version of the API and is incompatible with this library (as of 2015-04-27).</summary>
+    ''' <summary>The URL of the site to get results from. This allows the library to be used for other sites based on the VocaDB code.</summary>
     Public DatabaseUrl As Uri = New Uri("http://vocadb.net/")
 
     ''' <summary>An array of strings used to separate the song name from additional information in the title (eg. " feat.").</summary>
