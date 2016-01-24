@@ -22,7 +22,7 @@
     Dim LyricsResult As VocaDbLyricsLib.LyricsResult
 
     <TestMethod()> Public Sub ReturnsLyricsFromId()
-        LyricsResult = LyricsLib.GetLyricsFromName("world is mine")
+        LyricsResult = LyricsLib.GetLyricsFromId(1326) 'world is mine
         Assert.IsTrue(LyricsResult.LyricsContainers.Count > 0)
         Assert.IsTrue(LyricsResult.ErrorType = VocaDbLyricsLib.VocaDbLyricsError.None)
         Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.None)
@@ -104,16 +104,38 @@
 
     <TestMethod()> Public Sub ForceArtist_Success()
         LyricsLib.ForceArtistMatch = True
-        LyricsResult = LyricsLib.GetLyricsFromName("twitter", "darvishP")
+        LyricsLib.UseOldForceArtistMatch = False
+        LyricsResult = LyricsLib.GetLyricsFromName("twitter (HGS edition)", "darvishP, GUMI")
         Assert.IsTrue(LyricsResult.LyricsContainers.Count > 0)
         Assert.IsTrue(LyricsResult.ErrorType = VocaDbLyricsLib.VocaDbLyricsError.None)
-        Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.None)
+        Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.UsedOriginal)
         LyricsLib.ForceArtistMatch = False
     End Sub
 
     <TestMethod()> Public Sub ForceArtist_Fail()
         LyricsLib.ForceArtistMatch = True
-        LyricsResult = LyricsLib.GetLyricsFromName("twitter", "dalvish")
+        LyricsLib.UseOldForceArtistMatch = False
+        LyricsResult = LyricsLib.GetLyricsFromName("twitter (HGS edition)", "darvishP, dalvish, GUMI")
+        Assert.IsTrue(LyricsResult.LyricsContainers.Count = 0)
+        Assert.IsTrue(LyricsResult.ErrorType = VocaDbLyricsLib.VocaDbLyricsError.NoSong)
+        Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.NoArtist)
+        LyricsLib.ForceArtistMatch = False
+    End Sub
+
+    <TestMethod()> Public Sub ForceArtist_Old_Success()
+        LyricsLib.ForceArtistMatch = True
+        LyricsLib.UseOldForceArtistMatch = True
+        LyricsResult = LyricsLib.GetLyricsFromName("twitter (HGS edition)", "darvishP, dalvish, GUMI")
+        Assert.IsTrue(LyricsResult.LyricsContainers.Count > 0)
+        Assert.IsTrue(LyricsResult.ErrorType = VocaDbLyricsLib.VocaDbLyricsError.None)
+        Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.SomeArtists)
+        LyricsLib.ForceArtistMatch = False
+    End Sub
+
+    <TestMethod()> Public Sub ForceArtist_Old_Fail()
+        LyricsLib.ForceArtistMatch = True
+        LyricsLib.UseOldForceArtistMatch = True
+        LyricsResult = LyricsLib.GetLyricsFromName("twitter (HGS edition)", "dalvish, darvishP, GUMI")
         Assert.IsTrue(LyricsResult.LyricsContainers.Count = 0)
         Assert.IsTrue(LyricsResult.ErrorType = VocaDbLyricsLib.VocaDbLyricsError.NoSong)
         Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.NoArtist)

@@ -144,6 +144,9 @@ Public Class MainFrm
                 Case VocaDbLyricsLib.VocaDbLyricsWarning.NoArtist
                     Me.Invoke(Sub() LblStatus.Text = "Note: Arist was ignored.")
 
+                Case VocaDbLyricsLib.VocaDbLyricsWarning.SomeArtists
+                    Me.Invoke(Sub() LblStatus.Text = "Note: Only some artists used.")
+
                 Case VocaDbLyricsLib.VocaDbLyricsWarning.UsedOriginal
                     'This happens when the song is detected as a cover/remix and has no lyrics, but does have the 'OriginalVersionId' set.
                     'Sometimes a cover/remix result can be returned when searching for an original song.
