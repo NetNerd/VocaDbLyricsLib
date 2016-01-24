@@ -1,5 +1,5 @@
 # VocaDbLyricsLib
-This is a library I wrote in VB.NET to make it easy for me to retreive lyrics for songs from VocaDB.
+This is a library I wrote in VB.NET to make it easy for me to retreive lyrics for songs from VocaDB (and sites based on the same code like UtaiteDB).
 At first it was extremely basic, but it quickly expanded to have much more functionality.
 
 The library supports finding songs by name or id and returns results in multiple languages where available.
