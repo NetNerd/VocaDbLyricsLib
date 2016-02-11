@@ -112,6 +112,16 @@
         LyricsLib.ForceArtistMatch = False
     End Sub
 
+    <TestMethod()> Public Sub ForceArtist_Success_ManyArtists()
+        LyricsLib.ForceArtistMatch = True
+        LyricsLib.UseOldForceArtistMatch = False
+        LyricsResult = LyricsLib.GetLyricsFromName("Birthday Song for ミク", "Mitchie M, 鏡音リン, 鏡音レン")
+        Assert.IsTrue(LyricsResult.LyricsContainers.Count > 0)
+        Assert.IsTrue(LyricsResult.ErrorType = VocaDbLyricsLib.VocaDbLyricsError.None)
+        Assert.IsTrue(LyricsResult.WarningType = VocaDbLyricsLib.VocaDbLyricsWarning.None)
+        LyricsLib.ForceArtistMatch = False
+    End Sub
+
     <TestMethod()> Public Sub ForceArtist_Fail()
         LyricsLib.ForceArtistMatch = True
         LyricsLib.UseOldForceArtistMatch = False

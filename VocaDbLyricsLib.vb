@@ -180,7 +180,7 @@ Public Class VocaDbLyricsLib
 
         If Artist IsNot Nothing Then
             Dim Artists() As String
-            Artists = Artist.Split(ArtistSplitStrings, 2, StringSplitOptions.RemoveEmptyEntries)
+            Artists = Artist.Split(ArtistSplitStrings, StringSplitOptions.RemoveEmptyEntries)
 
             ReDim ArtistIds(Artists.Length - 1)
             For i As Integer = 0 To Artists.Length - 1
