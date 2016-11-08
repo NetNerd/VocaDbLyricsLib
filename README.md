@@ -4,6 +4,9 @@
 So... things are pretty broken. https://github.com/NetNerd/VocaDbLyricsLib/issues/1
 At least song/artist searching still works for if someone wants to use this as a base for further development, but the way languages are handled and the parsing for songs seems like it needs some work.
 
+&nbsp;
+
+&nbsp;
 
 This is a library I wrote in VB.NET to make it easy for me to retreive lyrics for songs from VocaDB (and sites based on the same code like UtaiteDB).
 At first it was extremely basic, but it quickly expanded to have much more functionality.
