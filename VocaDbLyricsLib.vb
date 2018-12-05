@@ -66,6 +66,7 @@ Public Class VocaDbLyricsLib
     ''' <summary>Contains lyrics and associated information.</summary>
     Public Structure LyricsContainer
         Public Language As String
+        Public TranslationType As String
         Public Lyrics As String
     End Structure
 
@@ -377,11 +378,13 @@ Public Class VocaDbLyricsLib
                 End If
 
             Else
-                ReDim LyricsResult.LyricsContainers(SongContract.Item("Lyrics").ChildNodes.Count - 1)
+                ReDim LyricsResult.LyricsContainers(SongContract.Item("Lyrics").ChildNodes.Count - 1) 'Child nodes of SongContract.Item("Lyrics") are LyricsForSongContract
                 For i As Integer = 0 To LyricsResult.LyricsContainers.Length - 1
                     Dim Lyrics = SongContract.Item("Lyrics").ChildNodes(i)
-                    LyricsResult.LyricsContainers(i).Language = Lyrics.Item("Language").InnerText
+                    LyricsResult.LyricsContainers(i).Language = Lyrics.Item("CultureCode").InnerText
+                    LyricsResult.LyricsContainers(i).TranslationType = Lyrics.Item("TranslationType").InnerText
                     LyricsResult.LyricsContainers(i).Lyrics = Lyrics.Item("Value").InnerText
+
                     While LyricsResult.LyricsContainers(i).Lyrics.First = vbCr Or LyricsResult.LyricsContainers(i).Lyrics.First = vbLf
                         LyricsResult.LyricsContainers(i).Lyrics = LyricsResult.LyricsContainers(i).Lyrics.Remove(0, 1)
                     End While

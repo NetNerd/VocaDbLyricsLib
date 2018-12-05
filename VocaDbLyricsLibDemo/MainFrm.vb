@@ -20,77 +20,15 @@
 Public Class MainFrm
     Dim GetLyricsThread As New Threading.Thread(New Threading.ThreadStart(AddressOf GetLyricsSub))
 
-    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        LangBox1.Items.Add("Japanese")
-        LangBox2.Items.Add("Romaji")
-        LangBox2.Items.Add("English")
-    End Sub
+    Dim SpecialLanguages As Dictionary(Of String, String) =
+        New Dictionary(Of String, String) From {{"orig", "Original"}, {"rom", "Romanized"}}
 
-    Private Sub LangBox_DragDrop(ByVal sender As ListBox, ByVal e As System.Windows.Forms.DragEventArgs) Handles LangBox1.DragDrop, LangBox2.DragDrop
-        If sender.PointToClient(New Point(e.X, e.Y)).Y < 0 Then
-            sender.Items.Insert(0, e.Data.GetData(DataFormats.Text))
-        ElseIf sender.PointToClient(New Point(e.X, e.Y)).Y > sender.ItemHeight * sender.Items.Count Then
-            sender.Items.Add(e.Data.GetData(DataFormats.Text))
-        Else
-            sender.Items.Insert(sender.PointToClient(New Point(e.X, e.Y)).Y / sender.ItemHeight, e.Data.GetData(DataFormats.Text))
-        End If
-
-        'Remove the old item
-        If (LangBox1.SelectedIndex > -1 AndAlso e.Data.GetData(DataFormats.Text) Is LangBox1.Items(LangBox1.SelectedIndex)) Then
-            LangBox1.Items.RemoveAt(LangBox1.SelectedIndex)
-        ElseIf (LangBox2.SelectedIndex > -1 AndAlso e.Data.GetData(DataFormats.Text) Is LangBox2.Items(LangBox2.SelectedIndex)) Then
-            LangBox2.Items.RemoveAt(LangBox2.SelectedIndex)
-        End If
-    End Sub
-
-    Private Sub LangBox_DragEnter(ByVal sender As ListBox, ByVal e As System.Windows.Forms.DragEventArgs) Handles LangBox1.DragEnter, LangBox2.DragEnter
-        'Only give the effect for an item that's from one of the listboxes
-        If (LangBox1.SelectedIndex > -1 AndAlso e.Data.GetData(DataFormats.Text) Is LangBox1.Items(LangBox1.SelectedIndex)) _
-            OrElse (LangBox2.SelectedIndex > -1 AndAlso e.Data.GetData(DataFormats.Text) Is LangBox2.Items(LangBox2.SelectedIndex)) Then
-            e.Effect = DragDropEffects.Move
-        Else
-            e.Effect = DragDropEffects.None
-        End If
-    End Sub
-
-    Private Sub LangBox_MouseDown(ByVal sender As ListBox, ByVal e As System.Windows.Forms.MouseEventArgs) Handles LangBox1.MouseDown, LangBox2.MouseDown
-        sender.SelectionMode = SelectionMode.One
-        Dim OldSelected As Integer = sender.SelectedIndex
-        Dim OldSelectedText As String = sender.Text
-        Dim OldCount As Integer = sender.Items.Count
-
-        Try
-            sender.DoDragDrop(sender.Items(sender.IndexFromPoint(New Point(e.X, e.Y))), DragDropEffects.Move)
-        Catch ex As Exception
-            sender.SelectionMode = SelectionMode.None 'You can drag over items to select them. This prevents that when you drag from a blank area.
-        End Try
-
-        'If the Then old selected item Is still In the same place, Select it again because the user (hopefully) didn't want anything to change.
-        If sender.Items.Count = OldCount AndAlso OldSelected > -1 AndAlso sender.Items(OldSelected) = OldSelectedText AndAlso sender.SelectionMode = SelectionMode.One Then
-            sender.SelectedIndex = OldSelected
-        End If
-    End Sub
-
-    Private Sub TextBox_DragDrop(sender As TextBox, e As DragEventArgs) Handles SongBox.DragDrop, ArtistBox.DragDrop
+    Private Sub TextBox_DragDrop(sender As TextBox, e As DragEventArgs) Handles SongBox.DragDrop, ArtistBox.DragDrop, LanguageBox.DragDrop
         sender.Text = e.Data.GetData(DataFormats.Text)
     End Sub
 
-    Private Sub TextBox_DragEnter(sender As TextBox, e As DragEventArgs) Handles SongBox.DragEnter, ArtistBox.DragEnter
+    Private Sub TextBox_DragEnter(sender As TextBox, e As DragEventArgs) Handles SongBox.DragEnter, ArtistBox.DragEnter, LanguageBox.DragEnter
         e.Effect = DragDropEffects.Copy
-    End Sub
-
-    Private Sub BtnL_Click(sender As Object, e As EventArgs) Handles BtnL.Click
-        If LangBox2.SelectedIndex > -1 Then
-            LangBox1.Items.Add(LangBox2.Items(LangBox2.SelectedIndex))
-            LangBox2.Items.RemoveAt(LangBox2.SelectedIndex)
-        End If
-    End Sub
-
-    Private Sub BtnR_Click(sender As Object, e As EventArgs) Handles BtnR.Click
-        If LangBox1.SelectedIndex > -1 Then
-            LangBox2.Items.Add(LangBox1.Items(LangBox1.SelectedIndex))
-            LangBox1.Items.RemoveAt(LangBox1.SelectedIndex)
-        End If
     End Sub
 
     Private Sub BtnGo_Click(sender As Object, e As EventArgs) Handles BtnGo.Click
@@ -113,12 +51,40 @@ Public Class MainFrm
 
         Select Case LyricsResult.ErrorType
             Case VocaDbLyricsLib.VocaDbLyricsError.None
-                For Each Item In LangBox2.Items
+                Dim DoneLyrics As VocaDbLyricsLib.LyricsContainer()
+                ReDim DoneLyrics(0)
+
+                Dim LangboxtextClean = LanguageBox.Text.Trim()
+                Dim Languages = LangboxtextClean.Split(",")
+                For Each Item In Languages
+                    Dim ItemFriendly As String
+                    If Item.Contains("/") Then
+                        ItemFriendly = Item.Split("/")(1).Trim()
+                        Item = Item.Split("/")(0).ToLower().Trim()
+                    Else
+                        ItemFriendly = Item.Trim()
+                        Item = Item.ToLower()
+                    End If
+
                     For Each LyricsContainer In LyricsResult.LyricsContainers
-                        If LyricsContainer.Language = Item.ToString Then
-                            If LyricsWriter.ToString.Length > 0 Then LyricsWriter.Write(vbNewLine & vbNewLine & vbNewLine & vbNewLine)
-                            If LangBox2.Items.Count > 1 Then LyricsWriter.WriteLine(LyricsContainer.Language & ":")
-                            LyricsWriter.Write(LyricsContainer.Lyrics)
+                        If Not DoneLyrics.Contains(LyricsContainer) Then
+                            If LangboxtextClean.Length = 0 Or 'Make optional to specify languages
+                               (LyricsContainer.Language = Item And Not LyricsContainer.TranslationType = "Romanized") Or 'Romanized requires special case
+                               (SpecialLanguages.ContainsKey(Item) AndAlso LyricsContainer.TranslationType = SpecialLanguages.Item(Item)) Then
+
+                                ReDim Preserve DoneLyrics(DoneLyrics.Length)
+                                DoneLyrics(DoneLyrics.Length - 1) = LyricsContainer
+
+                                If LyricsWriter.ToString.Length > 0 Then LyricsWriter.Write(vbNewLine & vbNewLine & vbNewLine & vbNewLine)
+                                If LangboxtextClean.Length = 0 Or Languages.Length > 1 Then
+                                    If ItemFriendly.Length > 0 Then
+                                        LyricsWriter.WriteLine(ItemFriendly & ":")
+                                    Else
+                                        LyricsWriter.WriteLine(LyricsContainer.Language & ":")
+                                    End If
+                                End If
+                                LyricsWriter.Write(LyricsContainer.Lyrics)
+                            End If
                         End If
                     Next
                 Next
