@@ -36,7 +36,7 @@ Public Class VocaDbLyricsLib
     Public Proxy As Net.WebProxy = Nothing
 
     ''' <summary>The URL of the site to get results from. This allows the library to be used for other sites based on the VocaDB code.</summary>
-    Public DatabaseUrl As Uri = New Uri("http://vocadb.net/")
+    Public DatabaseUrl As Uri = New Uri("https://vocadb.net/")
 
     ''' <summary>An array of strings used to separate the song name from additional information in the title (eg. " feat.").</summary>
     Public SongSplitStrings() As String = {" feat.", " ft.", " feat ", " ft ", "(feat", "(ft"}
