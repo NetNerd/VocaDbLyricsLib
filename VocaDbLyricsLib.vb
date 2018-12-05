@@ -25,8 +25,8 @@ Imports System.Runtime.InteropServices
 Public Class VocaDbLyricsLib
     'Public variables
     ''' <summary>The user agent to be used in any web requests.</summary>
-    Public UserAgent As String = "VocaDbLyricsLib/0.4"
-    Private DefaultUserAgent As String = "VocaDbLyricsLib/0.4"
+    Public UserAgent As String = "VocaDbLyricsLib/0.5"
+    Private DefaultUserAgent As String = "VocaDbLyricsLib/0.5"
 
     ''' <summary>Controls whether or not the default user agent of the library is appended to the provided one. Recommended if using a custom user agent. Defaults to true.</summary>
     Public AppendDefaultUserAgent As Boolean = True
