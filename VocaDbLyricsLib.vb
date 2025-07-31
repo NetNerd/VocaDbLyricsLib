@@ -270,48 +270,33 @@ Public Class VocaDbLyricsLib
         End If
 
         Dim cleanSong = Song.Split(SongSplitStrings, 2, StringSplitOptions.RemoveEmptyEntries)(0).Trim()
-        Dim url = $"{DatabaseUrl}api/songs?query={Uri.EscapeDataString(cleanSong)}&sort={SongSortRule}&fields=lyrics,tags&nameMatchMode=Exact&maxResults={SearchSongs}"
-
-        For Each id In artistIds
-            If id <> -1 Then
-                url &= "&artistId%5B%5D=" & id.ToString()
-            End If
-        Next
+        Dim songlist As SongListResult
 
         Try
-            Dim json = DownloadJsonAsync(url).Result
-            Dim songList = JsonConvert.DeserializeObject(Of SongListResult)(json)
-
-            If songList?.Items Is Nothing OrElse songList.Items.Count = 0 Then
-                result.ErrorType = VocaDbLyricsError.NoSong
-                Return result
-            End If
-
-            result = GetLyricsFromId(songList.Items(0).Id)
-
-            For i As Integer = 0 To artistIds.Count - 1             'For each ID
-                If Not artistIds(i) = -1 Then                        'If in DB
-                    If i > 0 Then                                    'Not first iteration (first failed)
-                        result.WarningType = VocaDbLyricsWarning.SomeArtists
-                    Else                                             'Else: Is first iteration
-                        For j As Integer = 1 To artistIds.Count - 1
-                            If artistIds(j) = -1 Then result.WarningType = VocaDbLyricsWarning.SomeArtists
-                        Next
-                    End If
-                    Return result
-                End If                                               'Getting here means no artists matched
-            Next
-
-            If Artist IsNot Nothing AndAlso Artist.Length > 0 Then
-                result.WarningType = VocaDbLyricsWarning.NoArtist
-            End If
-
-            Return result
-
-            result.ErrorType = VocaDbLyricsError.NoLyrics
+            songlist = GetSongListFromName(cleanSong, artistIds)
         Catch
             result.ErrorType = VocaDbLyricsError.ConnectionError
+            Return result
         End Try
+
+        result = GetLyricsResultFromSongList(songlist)
+
+        For i As Integer = 0 To artistIds.Count - 1              'For each ID
+            If Not artistIds(i) = -1 Then                        'If in DB
+                If i > 0 Then                                    'Not first iteration (first failed)
+                    result.WarningType = VocaDbLyricsWarning.SomeArtists
+                Else                                             'Else: Is first iteration
+                    For j As Integer = 1 To artistIds.Count - 1
+                        If artistIds(j) = -1 Then result.WarningType = VocaDbLyricsWarning.SomeArtists
+                    Next
+                End If
+                Return result
+            End If                                               'Getting here means no artists matched
+        Next
+
+        If Artist IsNot Nothing AndAlso Artist.Length > 0 Then
+            result.WarningType = VocaDbLyricsWarning.NoArtist
+        End If
 
         Return result
     End Function
@@ -322,56 +307,115 @@ Public Class VocaDbLyricsLib
     ''' <param name="SongId">The ID of the song.</param>
     Public Function GetLyricsFromId(SongId As Integer) As LyricsResult
         Dim result As New LyricsResult({})
+        Dim song As SongContract
 
-        Dim url = $"{DatabaseUrl}api/songs/{SongId}?fields=lyrics,tags"
         Try
-            Dim json = DownloadJsonAsync(url).Result
-            Dim song = JsonConvert.DeserializeObject(Of SongContract)(json)
+            song = GetSongContractFromId(SongId)
+        Catch
+            result.ErrorType = VocaDbLyricsError.ConnectionError
+            Return result
+        End Try
 
-            If song Is Nothing Then
-                result.ErrorType = VocaDbLyricsError.NoSong
-                Return result
+        If song Is Nothing Then
+            result.ErrorType = VocaDbLyricsError.NoSong
+            Return result
+        End If
+
+        Dim songlist = New SongListResult()
+        songlist.Items = New List(Of SongContract)
+        songlist.Items.Add(song)
+        result = GetLyricsResultFromSongList(songlist)
+        Return result
+    End Function
+
+    ''' <summary>
+    ''' Returns SongListResult containing songs on VocaDB from name search.
+    ''' </summary>
+    ''' <param name="Song">Name of the song (already cleaned as appropriate).</param>
+    ''' <param name="ArtistIds">List of artist IDs.</param>
+    Private Function GetSongListFromName(Song As String, ArtistIds As List(Of Integer)) As SongListResult
+        Dim url = $"{DatabaseUrl}api/songs?query={Uri.EscapeDataString(Song)}&sort={SongSortRule}&fields=lyrics,tags&nameMatchMode=Exact&maxResults={SearchSongs}"
+
+        For Each id In ArtistIds
+            If id <> -1 Then
+                url &= "&artistId%5B%5D=" & id.ToString()
             End If
+        Next
 
+        Dim json = DownloadJsonAsync(url).Result
+        Return JsonConvert.DeserializeObject(Of SongListResult)(json)
+    End Function
+
+    ''' <summary>
+    ''' Returns SongContract for song on VocaDB from its ID. (or Nothing if song doesn't exist)
+    ''' </summary>
+    ''' <param name="SongId">Song ID</param>
+    Private Function GetSongContractFromId(SongId As Integer) As SongContract
+        Dim url = $"{DatabaseUrl}api/songs/{SongId}?fields=lyrics,tags"
+        Dim json = DownloadJsonAsync(url).Result
+        Return JsonConvert.DeserializeObject(Of SongContract)(json)
+    End Function
+
+    'Note: can parse multiple SongContracts at once, to search for original version - quite useful
+    Private Function GetLyricsResultFromSongList(songlist As SongListResult) As LyricsResult
+        Dim result As New LyricsResult({})
+
+        If songlist?.Items Is Nothing OrElse songlist.Items.Count = 0 Then
+            result.ErrorType = VocaDbLyricsError.NoSong
+            Return result
+        End If
+
+        'The fun part:
+        For Each song In songlist.Items
             If song.Lyrics Is Nothing OrElse song.Lyrics.Count = 0 Then
                 If DetectInstrumental = True Then
                     'We only want to return lyrics for non-instrumentals. If we detect an instrumental, we can return an error.
                     For Each tag In song.Tags
                         If tag.Tag.Name = "instrumental" Then
-                            'Detecting an instrumental causes searching to stop, because there's a decent chance that continued searching will falsely return lyrics.
+                            'Detecting an instrumental causes searching to stop,
+                            'because there's a decent chance that continued searching will falsely return lyrics.
                             result.ErrorType = VocaDbLyricsError.IsInstrumental
                             Return result
                         End If
                     Next
                 End If
+
                 If song.OriginalVersionId IsNot Nothing Then
-                    result = GetLyricsFromId(song.OriginalVersionId)
-                    If result.LyricsContainers.Count > 0 Then
-                        result.WarningType = VocaDbLyricsWarning.UsedOriginal
-                        Return result
+                    Dim origsong = songlist.Items.Find(Function(x As SongContract) x.Id = song.OriginalVersionId)
+
+                    If origsong IsNot Nothing Then  'Original version of song is in results we already retrieved, no need for another API query
+                        Dim origlist = New SongListResult()
+                        origlist.Items = New List(Of SongContract)
+                        origlist.Items.Add(origsong)
+                        result = GetLyricsResultFromSongList(origlist)
+                        If result.LyricsContainers.Count > 0 Then
+                            result.WarningType = VocaDbLyricsWarning.UsedOriginal
+                            Return result
+                        End If
+                    Else
+                        result = GetLyricsFromId(song.OriginalVersionId)
+                        If result.LyricsContainers.Count > 0 Then
+                            result.WarningType = VocaDbLyricsWarning.UsedOriginal
+                            Return result
+                        End If
                     End If
                 End If
-                result.ErrorType = VocaDbLyricsError.NoLyrics
+
+            Else
+                ReDim result.LyricsContainers(song.Lyrics.Count - 1)
+                For i = 0 To song.Lyrics.Count - 1
+                    result.LyricsContainers(i) = New LyricsContainer With {
+                        .Language = song.Lyrics(i).CultureCode,
+                        .TranslationType = song.Lyrics(i).TranslationType,
+                        .Lyrics = song.Lyrics(i).Value.Trim(vbCr, vbLf)  'only trim newlines - some lyrics are deliberately indented
+                    }
+                Next
                 Return result
             End If
-
-            Dim containers(song.Lyrics.Count - 1) As LyricsContainer
-            For i = 0 To song.Lyrics.Count - 1
-                containers(i) = New LyricsContainer With {
-                    .Language = song.Lyrics(i).CultureCode,
-                    .TranslationType = song.Lyrics(i).TranslationType,
-                    .Lyrics = song.Lyrics(i).Value.Trim()
-                }
-            Next
-
-            result = New LyricsResult(containers)
-        Catch
-            result.ErrorType = VocaDbLyricsError.ConnectionError
-        End Try
-
+        Next
+        result.ErrorType = VocaDbLyricsError.NoLyrics
         Return result
     End Function
-
 
     Private Async Function DownloadJsonAsync(url As String) As Task(Of String)
         Using handler = New HttpClientHandler()
